@@ -1,5 +1,4 @@
 from urllib import request
-    
 
 class GitHubApi:
 

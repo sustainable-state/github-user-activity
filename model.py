@@ -12,11 +12,11 @@ class Actor:
 
 @dataclass
 class Payload:
-    before: str
-    head: str
-    push_id: int
-    ref: str
-    repository_id: int
+    before: str | None
+    head: str | None
+    push_id: int | None
+    ref: str 
+    repository_id: int | None
 
 
 @dataclass

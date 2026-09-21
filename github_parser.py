@@ -1,25 +1,51 @@
 from model import Event, Payload, Repo, Actor
+from decorators import handle_parse_errors
+
+from exceptions import (
+    EventKeyError,
+    EventValueError,
+    PayloadKeyError,
+    PayloadValueError,
+    ActorKeyError,
+    ActorValueError,
+    RepoKeyError,
+    RepoValueError,
+)
+
 
 class EventParser:
 
     def parse_events(self, data: list[dict]) -> list[Event]:
         return [self._parse_event(row) for row in data]
 
+    @handle_parse_errors(
+        EventKeyError,
+        EventValueError,
+        Event,
+    )
+    def _parse_event(self, data: dict) -> Event:
+        event_type = data["type"]
 
-    @staticmethod
-    def _parse_event(data: dict) -> Event:
         return Event(
-            actor=EventParser._parse_actor(data["actor"]),
+            actor=self._parse_actor(data["actor"]),
             created_at=data["created_at"],
             id=int(data["id"]),
-            payload=EventParser._parse_payload(data["payload"]),
+            payload=self._parse_payload(
+                data["payload"],
+                event_type,
+            ),
             public=data["public"],
-            repo=EventParser._parse_repo(data["repo"]),
-            event_type=data["type"],
+            repo=self._parse_repo(data["repo"]),
+            event_type=event_type,
         )
 
 
     @staticmethod
+    @handle_parse_errors(
+        ActorKeyError,
+        ActorValueError,
+        Actor,
+    )
     def _parse_actor(data: dict) -> Actor:
         return Actor(
             avatar_url=data["avatar_url"],
@@ -30,9 +56,42 @@ class EventParser:
             url=data["url"],
         )
 
+    @handle_parse_errors(
+        PayloadKeyError,
+        PayloadValueError,
+        Payload,
+    )
+    def _parse_payload(
+        self,
+        data: dict,
+        event_type: str,
+    ) -> Payload:
+
+        payload_event_type = {
+            "CreateEvent": self._parse_payload_create_event,
+        }
+
+        parser = payload_event_type.get(
+            event_type,
+            self._parse_payload_default_event,
+        )
+
+        return parser(data)
+
 
     @staticmethod
-    def _parse_payload(data: dict) -> Payload:
+    def _parse_payload_create_event(data: dict) -> Payload:
+        return Payload(
+            before=None,
+            head=None,
+            push_id=None,
+            ref=data["ref"],
+            repository_id=None,
+        )
+
+
+    @staticmethod
+    def _parse_payload_default_event(data: dict) -> Payload:
         return Payload(
             before=data["before"],
             head=data["head"],
@@ -43,12 +102,14 @@ class EventParser:
 
 
     @staticmethod
+    @handle_parse_errors(
+        RepoKeyError,
+        RepoValueError,
+        Repo,
+    )
     def _parse_repo(data: dict) -> Repo:
         return Repo(
             id=int(data["id"]),
             name=data["name"],
             url=data["url"],
         )
-
-
-

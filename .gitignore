@@ -1,3 +1,6 @@
-# Python files
+# Python external files
 venv
 __pycache__
+
+# Python test script
+test.py
