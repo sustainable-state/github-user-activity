@@ -10,6 +10,7 @@ from exceptions import (
     ActorValueError,
     RepoKeyError,
     RepoValueError,
+    EventParserError
 )
 
 
@@ -68,35 +69,38 @@ class EventParser:
     ) -> Payload:
 
         payload_event_type = {
-            "CreateEvent": self._parse_payload_create_event,
+            "CreateEvent": self._payload_create_event,
+            "PushEvent": self._payload_push_event,
         }
 
-        parser = payload_event_type.get(
-            event_type,
-            self._parse_payload_default_event,
-        )
+        parser = payload_event_type.get(event_type)
+
+        if parser is None:
+            raise EventParserError(f"Unsupported event type: {event_type}")
 
         return parser(data)
 
 
     @staticmethod
-    def _parse_payload_create_event(data: dict) -> Payload:
+    def _payload_create_event(data: dict) -> Payload:
         return Payload(
             before=None,
             head=None,
             push_id=None,
             ref=data["ref"],
+            ref_type=data["ref_type"],
             repository_id=None,
         )
 
 
     @staticmethod
-    def _parse_payload_default_event(data: dict) -> Payload:
+    def _payload_push_event(data: dict) -> Payload:
         return Payload(
             before=data["before"],
             head=data["head"],
             push_id=int(data["push_id"]),
             ref=data["ref"],
+            ref_type=None,
             repository_id=int(data["repository_id"]),
         )
 

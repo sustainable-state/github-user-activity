@@ -2,6 +2,18 @@ class ArgumentExtractError(ValueError):
     ...
 
 
+class InternetError(Exception):
+    ...
+
+
+class HttpError(InternetError):
+    ...
+
+
+class UrlError(InternetError):
+    ...
+
+
 class EventParserError(Exception):
     ...
 

@@ -15,7 +15,8 @@ class Payload:
     before: str | None
     head: str | None
     push_id: int | None
-    ref: str 
+    ref: str
+    ref_type: str | None
     repository_id: int | None
 
 
